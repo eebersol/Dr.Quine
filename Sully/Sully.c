@@ -5,40 +5,30 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
-
-void sully_replicate(char c)
-{
-	c = c - 1;
-	int fd;
-	char *result = (char*)malloc(sizeof(char) * 50);
-	char *execSully = (char*)malloc(sizeof(char) * 50);
-	char *cpy="#include <stdio.h>%1$c#include <stdlib.h>%1$c#include <string.h>%1$c#include <fcntl.h>%1$c#include <sys/types.h>%1$c#include <sys/stat.h>%1$c#include <unistd.h>%1$c%1$cvoid sully_replicate(char c)%1$c{%1$c%2$cc = c - 1;%1$c%2$cint fd;%1$c%2$cchar *result = (char*)malloc(sizeof(char) * 50);%1$c%2$cchar *execSully = (char*)malloc(sizeof(char) * 50);%1$c%2$cchar *cpy=%3$c%s%3$c;%1$c%2$cstrcpy(result, %3$cSully_%3$c);%1$c%2$cstrncat(result, &c, 1);%1$c%2$cstrcat(result, %3$c.c%3$c);%1$c%2$cfd = open(result, O_WRONLY | O_CREAT, 0644);%1$c%2$cdup2(fd, 1);%1$c%2$cprintf(cpy,10,9,34,cpy);%1$c%2$cclose(fd);%1$c%2$cstrcpy(execSully, %3$cgcc -Wall -Wextra -Werror %3$c);%1$c%2$cstrcat(execSully, result);%1$c%2$cif (system(execSully) != -1)%1$c%2$c%2$csystem(%3$c./a.out%3$c);%1$c%2$celse%1$c%2$c%2$cwrite(1, %3$cNO%3$c, 3);%1$c}%1$c%1$cint main()%1$c{%1$c%2$cchar *fileName;%1$c%1$c%2$cfileName = __FILE__;%1$c%2$cif (fileName[6])%1$c%2$c{%1$c%2$c%2$cif (fileName[6] > 48 && fileName[6] <= 53 && fileName[6] - 1 > 48)%1$c%2$c%2$c%2$csully_replicate(fileName[6]);%1$c%2$c%2$celse%1$c%2$c%2$c%2$csully_replicate('5');%1$c%2$c}%1$c%2$creturn(0);%1$c}%1$c";
-	strcpy(result, "Sully_");
-	strncat(result, &c, 1);
-	strcat(result, ".c");
-	fd = open(result, O_WRONLY | O_CREAT, 0644);
-	dup2(fd, 1);
-	printf(cpy,10,9,34,cpy);
-	close(fd);
-	strcpy(execSully, "gcc -Wall -Wextra -Werror ");
-	strcat(execSully, result);
-	if (system(execSully) != -1)
-		system("./a.out");
-	else
-		write(1, "NO", 3);
-}
+int i = -1;
+char result[80];
+char name[80];
+char exec[80];
 
 int main()
 {
-	char *fileName;
-
-	fileName = __FILE__;
-	if (fileName[6])
+	if (i > 0)
 	{
-		if (fileName[6] > 48 && fileName[6] <= 53 && fileName[6] - 1 > 48)
-			sully_replicate(fileName[6]);
-		else
-			sully_replicate('5');
+		if (strlen(__FILE__) != 7){i--;}
+		FILE *fd;
+		sprintf(result, "Sully_%d.c",i);
+		fd = fopen(result, "w+");
+		char *cpy = "#include <stdio.h>%1$c#include <stdlib.h>%1$c#include <string.h>%1$c#include <fcntl.h>%1$c#include <sys/types.h>%1$c#include <sys/stat.h>%1$c#include <unistd.h>%1$cint i = %4$d;%1$cchar result[80];%1$cchar name[80];%1$cchar exec[80];%1$c%1$cint main()%1$c{%1$c%2$cif (i > 0)%1$c%2$c{%1$c%2$c%2$cif (strlen(__FILE__) != 7){i--;}%1$c%2$c%2$cFILE *fd;%1$c%2$c%2$csprintf(result, %3$cSully_%%d.c%3$c,i);%1$c%2$c%2$cfd = fopen(result, %3$cw+%3$c);%1$c%2$c%2$cchar *cpy = %3$c%7$s%3$c;%1$c%2$c%2$csprintf(exec, %3$cSully_%%d%3$c,i);%1$c%2$c%2$cfprintf(fd,cpy,10,9,34,i,name,result,cpy);%1$c%2$c%2$cfclose(fd);%1$c%2$c%2$csprintf(name, %3$cgcc -Wall -Wextra -Werror -o %%s %%s%3$c, exec, result);if (i > 0)%1$c%2$c%2$c{%1$c%2$c%2$c%2$csystem(name);%1$c%2$c%2$c%2$csprintf(result, %3$c./%%s%3$c,exec);%1$c%2$c%2$c%2$csystem(result);%1$c%2$c%2$c}%1$c%2$c}%1$c%2$creturn(0);%1$c}";
+		sprintf(exec, "Sully_%d",i);
+		fprintf(fd,cpy,10,9,34,i,name,result,cpy);
+		fclose(fd);
+		sprintf(name, "gcc -Wall -Wextra -Werror -o %s %s", exec, result);
+		if (i > 0)
+		{
+			system(name);
+			sprintf(result, "./%s",exec);
+			system(result);
+		}
 	}
 	return(0);
 }
